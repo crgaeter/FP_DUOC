@@ -1,25 +1,14 @@
 # Este será el archivo principal.
 # En este archivo uniremos el trabajo de cada uno de los colaboradores.
 
-import time # Solo para simular tiempos de espera en el menú de clientes (Parte A)
-
-# =============================================================================
-# VARIABLES GLOBALES TEMPORALES (Estas las definirá Anny)
-# =============================================================================
-clientes = {}  # Diccionario unificado en minúsculas
-reservas = {}  # Diccionario de reservas
-FILAS = 5
-COLUMNAS = 8
-
-def mostrar_sala():
-    """ Función temporal de Anny """
-    print("[ MAPA DE LA SALA DE CINE (5x8) ]")
 
 # =============================================================================
 # Bastián - Clientes (Parte A):
 # Función para listar clientes.
 # Función para crear clientes pidiendo todos los datos.
 # =============================================================================
+
+import time
 
 #Creamos un diccionario vacío
 Clientes = {
@@ -81,6 +70,7 @@ def Menú_Clientes_PA():
 
 Menú_Clientes_PA()
 
+
 # =============================================================================
 # Héctor - Clientes (Parte B):
 # Función para modificar clientes buscando por RUT.  
@@ -106,6 +96,13 @@ Menú_Clientes_PA()
 def reservar_asientos():
     """
     Gestiona el proceso de reserva de asientos para los clientes.
+    
+    Aplica filtros de seguridad independientes para validar que el client exista,
+    esté vigente y que los asientos seleccionados estén disponibles. 
+    
+    Implementa un "carrito temporal" mediante la lista 'asientos_a_reservar' 
+    para acumular y validar las selecciones una a una, asegurando que la 
+    reserva original no se modifique hasta que todo el proceso sea correcto.
     """
     print("\n--- RESERVAR ASIENTOS ---")
     rut = input("Ingrese el RUT del cliente que reserva: ").strip().upper()
@@ -115,9 +112,9 @@ def reservar_asientos():
         print("Error: El cliente no está registrado. Debe crearlo primero.")
         return
 
-    # 2. Filtro de seguridad: ¿Está vigente? (Corregido a Diccionario)
+    # 2. Filtro de seguridad: ¿Está vigente?
     datos_cliente = clientes[rut]
-    if datos_cliente["Vigencia"] != "S":
+    if datos_cliente[3] != "S":
         print("Error: El cliente no está VIGENTE. No puede realizar reservas.")
         return
 
@@ -126,47 +123,65 @@ def reservar_asientos():
     asientos_a_reservar = []
     print("Ingrese los números de asiento que desea uno a uno. Para terminar, escriba '0'.")
     
+    # Bucle para pedir asientos hasta que el usuario escriba 0
     while True:
         entrada = input("Número de asiento: ").strip()
+        
         if not entrada.isdigit():
             print("Por favor, ingrese un número válido.")
             continue
             
         num_asiento = int(entrada)
+        
         if num_asiento == 0:
             break
             
+        # 3. Filtro: ¿El número está dentro de la sala?
         if num_asiento < 1 or num_asiento > (FILAS * COLUMNAS):
             print("Error: Ese número de asiento no existe en la sala.")
             continue
 
+        # 4. Filtro: ¿Alguien más ya compró este asiento?
         ya_ocupado = False
         for lista_asientos in reservas.values():
             if num_asiento in lista_asientos:
                 ya_ocupado = True
                 
-        if ya_ocupado:
+        if ya_ocupado == True:
             print("Error: Ese asiento ya está reservado por otro cliente.")
             continue
 
+        # 5. Filtro: Evitar que ingrese el mismo número dos veces
         if num_asiento in asientos_a_reservar:
             print("Ya añadiste este asiento a tu lista actual.")
             continue
 
+        # Si todo está OK, lo metemos al carrito temporal
         asientos_a_reservar.append(num_asiento)
 
     if len(asientos_a_reservar) == 0:
         print("No se seleccionaron asientos. Reserva cancelada.")
         return
 
+    # GUARDADO FINAL EN EL DICCIONARIO
     if rut in reservas:
-        reservas[rut].extend(asientos_a_reservar) 
+        reservas[rut].extend(asientos_a_reservar) # Suma a lo que ya tenía
     else:
-        reservas[rut] = asientos_a_reservar 
+        reservas[rut] = asientos_a_reservar # Crea su primera reserva
 
     print(f"¡Reserva completada con éxito! Asientos asignados: {asientos_a_reservar}")
 
+# ==============================================================================
+
 def modificar_reserva():
+    """
+    Permite a un cliente modificar su reserva actual de asientos.
+    El cliente ingresa su RUT, se valida que exista y tenga reservas activas.
+    Luego, se muestra su reserva actual y se le da la opción de seleccionar nuevos asientos.
+
+    Para evitar conflictos, la reserva original se elimina temporalmente durante el proceso de selección.
+    Si el cliente no selecciona nuevos asientos, se le devuelve su reserva original.
+    """
     print("\n--- MODIFICAR RESERVA ---")
     rut = input("Ingrese el RUT del cliente para modificar su reserva: ").strip().upper()
 
@@ -176,6 +191,7 @@ def modificar_reserva():
 
     print(f"Tus asientos actuales son: {reservas[rut]}")
     
+    # El truco maestro: borramos su reserva temporalmente para liberar los asientos en la pantalla
     respaldo_asientos = reservas[rut]
     del reservas[rut]
     
@@ -210,6 +226,7 @@ def modificar_reserva():
             
         nuevos_asientos.append(num_asiento)
 
+    # Si se arrepiente y no elige nada, le devolvemos su respaldo
     if len(nuevos_asientos) == 0:
         reservas[rut] = respaldo_asientos
         print("Se mantiene tu reserva original.")
@@ -217,7 +234,17 @@ def modificar_reserva():
         reservas[rut] = nuevos_asientos
         print(f"¡Reserva modificada con éxito! Nuevos asientos: {nuevos_asientos}")
 
+# ==============================================================================
+
 def eliminar_reserva():
+    """
+    Permite a un cliente eliminar completamente su reserva de asientos.
+    El cliente ingresa su RUT, se valida que exista y tenga reservas activas.
+    Al eliminar la reserva, los asientos quedan automáticamente libres para otros clientes.
+    No es necesario un proceso complejo, ya que al eliminar la llave del diccionario 'reservas',
+    se liberan todos los asientos asociados a ese cliente.
+    """
+
     print("\n--- ELIMINAR RESERVA ---")
     rut = input("Ingrese el RUT del cliente para cancelar su reserva: ").strip().upper()
 
@@ -225,10 +252,20 @@ def eliminar_reserva():
         print("Este cliente no tiene ninguna reserva registrada.")
         return
 
+    # Con solo borrar la llave del diccionario, los asientos quedan libres automáticamente
     del reservas[rut]
     print("¡La reserva ha sido eliminada y los asientos vuelven a estar disponibles!")
 
+# ==============================================================================
+
 def listar_reservas():
+    """
+    Muestra un listado de todas las reservas activas en el cine.
+    Para cada reserva, se muestra el RUT del cliente, su nombre (obtenido del diccionario 'clientes') y los asientos que ha reservado.
+    Si no hay reservas, se muestra un mensaje indicando que no hay ninguna reserva registrada.
+    Esta función es útil para tener una visión general de todas las reservas actuales en el cine.
+    """
+
     print("\n--- LISTADO DE RESERVAS ACTIVAS ---")
     
     if len(reservas) == 0:
@@ -236,12 +273,9 @@ def listar_reservas():
         return
 
     for rut, lista_asientos in reservas.items():
-        # Corregido a formato Diccionario
-        nombre_cliente = clientes[rut]["Nombre"] 
+        # Buscamos el nombre del cliente en el otro diccionario usando su RUT
+        nombre_cliente = clientes[rut][0] 
         print(f"RUT: {rut} | Nombre: {nombre_cliente} | Asientos Reservados: {lista_asientos}")
-
-
-# =============================================================================
-# PRUEBA DEL PROGRAMA (Solo para probar tus funciones hoy)
-# =============================================================================
-# Menú_Clientes_PA() # Descomenta para probar el menú de Bastián
+"""
+Fin Gestión de Reservas
+"""
