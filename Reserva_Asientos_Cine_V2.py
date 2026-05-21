@@ -18,7 +18,7 @@ clientes = {}
 # Valor: Una lista de números enteros con sus asientos (ej: [1, 2, 3])
 reservas = {}  
 
-# 'sala' será una LISTA DE LISTAS (Matriz), tal como lo pide el enunciado.
+# 'sala' será una LISTA DE LISTAS (Matriz).
 # Al inicio, la creamos vacía y la llenaremos con los números de asiento del 1 al 40.
 sala = []
 contador_asiento = 1
@@ -183,13 +183,22 @@ def eliminar_cliente():
     del clientes[rut]
     print("¡Cliente eliminado del sistema correctamente!")
 
-
 # ==============================================================================
 # MÓDULO DE CRISTIAN: GESTIÓN DE RESERVAS 
 # ==============================================================================
 
-def reservar_asientos():
     print("\n--- RESERVAR ASIENTOS ---")
+def reservar_asientos():
+        """
+    Gestiona el proceso de reserva de asientos para los clientes.
+    
+    Aplica filtros de seguridad independientes para validar que el cliente exista,
+    esté vigente y que los asientos seleccionados estén disponibles. 
+    
+    Implementa un "carrito temporal" mediante la lista 'asientos_a_reservar' 
+    para acumular y validar las selecciones una a una, asegurando que la 
+    reserva original no se modifique hasta que todo el proceso sea correcto.
+    """
     rut = input("Ingrese el RUT del cliente que reserva: ").strip().upper()
 
     # 1. Filtro de seguridad: ¿Existe el cliente?
@@ -256,6 +265,8 @@ def reservar_asientos():
 
     print(f"¡Reserva completada con éxito! Asientos asignados: {asientos_a_reservar}")
 
+# ==============================================================================
+
 
 def modificar_reserva():
     print("\n--- MODIFICAR RESERVA ---")
@@ -310,6 +321,7 @@ def modificar_reserva():
         reservas[rut] = nuevos_asientos
         print(f"¡Reserva modificada con éxito! Nuevos asientos: {nuevos_asientos}")
 
+# ==============================================================================
 
 def eliminar_reserva():
     print("\n--- ELIMINAR RESERVA ---")
@@ -323,6 +335,7 @@ def eliminar_reserva():
     del reservas[rut]
     print("¡La reserva ha sido eliminada y los asientos vuelven a estar disponibles!")
 
+# ==============================================================================
 
 def listar_reservas():
     print("\n--- LISTADO DE RESERVAS ACTIVAS ---")
@@ -335,6 +348,8 @@ def listar_reservas():
         # Buscamos el nombre del cliente en el otro diccionario usando su RUT
         nombre_cliente = clientes[rut][0] 
         print(f"RUT: {rut} | Nombre: {nombre_cliente} | Asientos Reservados: {lista_asientos}")
+
+# FIN GESTIÓN DE RESERVAS
 
 # ==============================================================================
 # CONTROLADOR PRINCIPAL (Menú)
