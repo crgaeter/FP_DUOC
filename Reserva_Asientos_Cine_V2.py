@@ -185,53 +185,48 @@ def eliminar_cliente():
 
 
 # ==============================================================================
-# FUNCIONES DE GESTIÓN DE RESERVAS [cite: 31]
+# MÓDULO DE CRISTIAN: GESTIÓN DE RESERVAS 
 # ==============================================================================
 
 def reservar_asientos():
-    """Permite a un cliente vigente elegir asientos libres y reservarlos[cite: 32, 33]."""
     print("\n--- RESERVAR ASIENTOS ---")
     rut = input("Ingrese el RUT del cliente que reserva: ").strip().upper()
 
-    # Validaciones obligatorias del enunciado:
-    # 1. El cliente debe existir [cite: 34, 64]
+    # 1. Filtro de seguridad: ¿Existe el cliente?
     if rut not in clientes:
         print("Error: El cliente no está registrado. Debe crearlo primero.")
         return
 
-    # 2. El cliente debe estar vigente [cite: 35, 65]
+    # 2. Filtro de seguridad: ¿Está vigente?
     datos_cliente = clientes[rut]
     if datos_cliente[3] != "S":
         print("Error: El cliente no está VIGENTE. No puede realizar reservas.")
         return
 
-    # Mostramos cómo está la sala en este momento para que elija
     mostrar_sala()
 
-    # Pedimos los asientos. Para mantenerlo simple, los pediremos uno por uno en un bucle
     asientos_a_reservar = []
     print("Ingrese los números de asiento que desea uno a uno. Para terminar, escriba '0'.")
     
+    # Bucle para pedir asientos hasta que el usuario escriba 0
     while True:
         entrada = input("Número de asiento: ").strip()
         
-        # Validación básica: verificar que sea un número 
         if not entrada.isdigit():
             print("Por favor, ingrese un número válido.")
             continue
             
         num_asiento = int(entrada)
         
-        # Si el usuario escribe 0, significa que terminó de elegir asientos
         if num_asiento == 0:
             break
             
-        # 3. El asiento debe existir (entre 1 y 40) [cite: 36, 66]
+        # 3. Filtro: ¿El número está dentro de la sala?
         if num_asiento < 1 or num_asiento > (FILAS * COLUMNAS):
             print("Error: Ese número de asiento no existe en la sala.")
             continue
 
-        # 4. El asiento no debe estar ocupado por NADIE (ni por él mismo ni por otros) [cite: 37, 67]
+        # 4. Filtro: ¿Alguien más ya compró este asiento?
         ya_ocupado = False
         for lista_asientos in reservas.values():
             if num_asiento in lista_asientos:
@@ -241,65 +236,48 @@ def reservar_asientos():
             print("Error: Ese asiento ya está reservado por otro cliente.")
             continue
 
-        # 5. Evitar que el usuario escriba el mismo número dos veces en esta misma tanda
+        # 5. Filtro: Evitar que ingrese el mismo número dos veces
         if num_asiento in asientos_a_reservar:
             print("Ya añadiste este asiento a tu lista actual.")
             continue
 
-        # Si pasó todos los filtros, lo agregamos a su lista temporal de deseos
+        # Si todo está OK, lo metemos al carrito temporal
         asientos_a_reservar.append(num_asiento)
 
-    # Si el usuario no ingresó ningún asiento válido, cancelamos la operación
     if len(asientos_a_reservar) == 0:
         print("No se seleccionaron asientos. Reserva cancelada.")
         return
 
-    # Guardamos los asientos en el diccionario de reservas bajo el RUT del cliente [cite: 38, 68]
-    # Si el cliente ya tenía reservas previas, le añadimos las nuevas; si no, creamos la lista de cero
+    # GUARDADO FINAL EN EL DICCIONARIO
     if rut in reservas:
-        # Añadimos los nuevos elementos a su lista existente usando .extend()
-        reservas[rut].extend(asientos_a_reservar)
+        reservas[rut].extend(asientos_a_reservar) # Suma a lo que ya tenía
     else:
-        # Creamos el registro por primera vez
-        reservas[rut] = asientos_a_reservar
+        reservas[rut] = asientos_a_reservar # Crea su primera reserva
 
     print(f"¡Reserva completada con éxito! Asientos asignados: {asientos_a_reservar}")
 
 
 def modificar_reserva():
-    """Permite reiniciar o cambiar los asientos de la reserva de un cliente[cite: 39, 40]."""
     print("\n--- MODIFICAR RESERVA ---")
     rut = input("Ingrese el RUT del cliente para modificar su reserva: ").strip().upper()
 
-    if rut not in clientes:
-        print("El cliente no está registrado.")
+    if rut not in clientes or rut not in reservas or len(reservas[rut]) == 0:
+        print("El cliente no existe o no tiene reservas activas.")
         return
 
-    if rut not in reservas or len(reservas[rut]) == 0:
-        print("Este cliente no tiene ninguna reserva activa que modificar.")
-        return
-
-    # Mostramos qué tiene reservado actualmente [cite: 41]
     print(f"Tus asientos actuales son: {reservas[rut]}")
     
-    print("Para simplificar el proceso, liberaremos tus asientos actuales")
-    print("y podrás seleccionar tu nueva combinación desde cero[cite: 44].")
-    
-    # Respaldamos por si decide arrepentirse o hay un error
+    # El truco maestro: borramos su reserva temporalmente para liberar los asientos en la pantalla
     respaldo_asientos = reservas[rut]
-    
-    # Eliminamos temporalmente su reserva para que esos asientos queden "libres" en la sala virtual
     del reservas[rut]
     
-    print("\nSelecciona tus nuevos asientos (puedes volver a incluir los que ya tenías):")
+    print("\nSelecciona tus nuevos asientos:")
     mostrar_sala()
     
-    # Volvemos a aplicar la lógica de selección de asientos (igual que al crear una reserva)
     nuevos_asientos = []
     while True:
         entrada = input("Número de asiento (0 para terminar): ").strip()
         if not entrada.isdigit():
-            print("Ingrese un número válido.")
             continue
         num_asiento = int(entrada)
         
@@ -307,35 +285,33 @@ def modificar_reserva():
             break
             
         if num_asiento < 1 or num_asiento > 40:
-            print("Ese asiento no existe[cite: 42].")
+            print("Ese asiento no existe.")
             continue
             
-        # Comprobar ocupación contra otros clientes [cite: 43]
         ya_ocupado = False
         for lista_asientos in reservas.values():
             if num_asiento in lista_asientos:
                 ya_ocupado = True
+                
         if ya_ocupado:
-            print("Asiento ocupado por otra persona[cite: 43].")
+            print("Asiento ocupado por otra persona.")
             continue
             
         if num_asiento in nuevos_asientos:
-            print("Asiento ya seleccionado en la lista.")
             continue
             
         nuevos_asientos.append(num_asiento)
 
-    # Si no eligió nada, le devolvemos lo que tenía originalmente para no perjudicarlo
+    # Si se arrepiente y no elige nada, le devolvemos su respaldo
     if len(nuevos_asientos) == 0:
         reservas[rut] = respaldo_asientos
-        print("No seleccionaste nuevos asientos. Se mantiene tu reserva original.")
+        print("Se mantiene tu reserva original.")
     else:
         reservas[rut] = nuevos_asientos
         print(f"¡Reserva modificada con éxito! Nuevos asientos: {nuevos_asientos}")
 
 
 def eliminar_reserva():
-    """Libera por completo la reserva de un cliente[cite: 45, 46]."""
     print("\n--- ELIMINAR RESERVA ---")
     rut = input("Ingrese el RUT del cliente para cancelar su reserva: ").strip().upper()
 
@@ -343,25 +319,22 @@ def eliminar_reserva():
         print("Este cliente no tiene ninguna reserva registrada.")
         return
 
-    # Al usar del, los números de asiento desaparecen del diccionario, volviendo a estar libres automáticamente [cite: 47]
+    # Con solo borrar la llave del diccionario, los asientos quedan libres automáticamente
     del reservas[rut]
-    print("¡La reserva ha sido eliminada y los asientos vuelven a estar disponibles[cite: 47]!")
+    print("¡La reserva ha sido eliminada y los asientos vuelven a estar disponibles!")
 
 
 def listar_reservas():
-    """Muestra un resumen de todas las reservas vinculadas con los nombres[cite: 48, 49]."""
     print("\n--- LISTADO DE RESERVAS ACTIVAS ---")
     
     if len(reservas) == 0:
         print("No hay ninguna reserva registrada en el cine.")
         return
 
-    # Recorremos el diccionario de reservas
     for rut, lista_asientos in reservas.items():
-        # Buscamos el nombre del cliente en el otro diccionario usando el RUT [cite: 49]
+        # Buscamos el nombre del cliente en el otro diccionario usando su RUT
         nombre_cliente = clientes[rut][0] 
         print(f"RUT: {rut} | Nombre: {nombre_cliente} | Asientos Reservados: {lista_asientos}")
-
 
 # ==============================================================================
 # CONTROLADOR PRINCIPAL (Menú)
