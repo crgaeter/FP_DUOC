@@ -77,7 +77,60 @@ Menú_Clientes_PA()
 # Función para eliminar clientes buscando por RUT.
 # =============================================================================
 
-# (Espacio reservado para Héctor)
+def modificar_cliente():
+    """Busca un cliente por RUT y permite cambiar sus datos uno por uno[cite: 26, 27]."""
+    print("\n--- MODIFICAR CLIENTE ---")
+    rut = input("Ingrese el RUT del cliente a modificar: ").strip().upper()
+
+    # Validamos si el RUT existe en nuestra "base de datos"
+    if rut not in clientes:
+        print("El cliente con ese RUT no existe.")
+        return
+
+    # Obtenemos la lista actual de ese cliente para mostrar sus valores viejos
+    datos_actuales = clientes[rut]
+
+    print(f"Modificando a: {datos_actuales[0]}")
+    print("(Presione ENTER si no desea cambiar el dato actual)")
+
+    # Pedimos los nuevos datos
+    nuevo_nombre = input(f"Nuevo nombre [{datos_actuales[0]}]: ").strip()
+    nuevo_telefono = input(f"Nuevo teléfono [{datos_actuales[1]}]: ").strip()
+    nuevo_mail = input(f"Nuevo mail [{datos_actuales[2]}]: ").strip()
+    nuevo_estado = input(f"¿Vigente? (S/N) [{datos_actuales[3]}]: ").strip().upper()
+
+    # Si el usuario escribió algo (no es un texto vacío ""), actualizamos la posición correspondiente
+    if nuevo_nombre != "":
+        datos_actuales[0] = nuevo_nombre
+    if nuevo_telefono != "":
+        datos_actuales[1] = nuevo_telefono
+    if nuevo_mail != "":
+        datos_actuales[2] = nuevo_mail
+    if nuevo_estado == "S" or nuevo_estado == "N":
+        datos_actuales[3] = nuevo_estado
+
+    # Guardamos la lista modificada de vuelta en el diccionario
+    clientes[rut] = datos_actuales
+    print("¡Datos del cliente actualizados correctamente!")
+
+
+def eliminar_cliente():
+    """Borra un cliente del sistema y libera automáticamente sus reservas[cite: 28, 29, 30]."""
+    print("\n--- ELIMINAR CLIENTE ---")
+    rut = input("Ingrese el RUT del cliente a eliminar: ").strip().upper()
+
+    if rut not in clientes:
+        print("El cliente con ese RUT no existe.")
+        return
+
+    # Regla del enunciado: Al eliminar un cliente, se borran sus reservas [cite: 30, 71]
+    if rut in reservas:
+        del reservas[rut] # Borramos la clave del cliente en el diccionario de reservas
+        print("-> Se han liberado los asientos que este cliente tenía reservados.")
+
+    # Borramos al cliente de nuestro diccionario principal
+    del clientes[rut]
+    print("¡Cliente eliminado del sistema correctamente!")
 
 
 # =============================================================================
