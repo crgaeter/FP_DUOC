@@ -191,7 +191,7 @@ def modificar_reserva():
 
     print(f"Tus asientos actuales son: {reservas[rut]}")
     
-    # El truco maestro: borramos su reserva temporalmente para liberar los asientos en la pantalla
+    # Borramos su reserva temporalmente para liberar los asientos en la pantalla
     respaldo_asientos = reservas[rut]
     del reservas[rut]
     
